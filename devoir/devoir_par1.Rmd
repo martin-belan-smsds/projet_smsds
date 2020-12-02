@@ -1,0 +1,49 @@
+---
+title: "Devoir - partie 1"
+output: 
+  html_notebook: 
+    highlight: tango
+    theme: cerulean
+---
+
+On réalise une étude afin d'estimer la prévalence de la maladie $M$ en population générale adulte en Île-de-France (adultes de 20 à 90 ans).
+
+Pour cela, on réalise le diagnostic dans un échantillon de 6348 sujets, composé de sujets issus de 5 cohortes :
+
+- 2686 participants de la cohorte A ;
+- 2934 participants de la cohorte B ;
+- 112 participants de la cohorte C ;
+- 119 participants de la cohorte D ;
+- 497 participants de la cohorte E.
+
+Les populations cibles de ces cohortes sont les suivantes :
+
+- A : hommes et femmes de 20 à 80 ans ;
+- B : hommes et femmes de 20 à 90 ans ;
+- C : femmes de 70 à 90 ans ;
+- D : hommes de 70 à 90 ans ;
+- E : hommes et femmes de 25 à 70 ans.
+
+Le tableau `devoir_sample` contient les données de cet échantillon. Les variables sont les suivantes :
+
+- `id` : identifiant unique de chaque sujet ;
+- `cohorte` : cohorte d'origine du sujet ;
+- `age` : âge du sujet ;
+- `sexe_m` : sexe masculin (`0` = femme, `1` = homme) ;
+- `csp` : catégorie socio-professionnelle (8 catégories) ;
+- `poids_sond` : poids de sondage (inverse des probabilités d'inclusion);
+- `statut` : présence de la maladie (`0` = non, `1` = oui).
+
+### Question 1
+
+En faisant l'hypothèse que les poids de sondage décrivent directement le nombre de sujets représentés dans la population cible (on verra par la suite que cette hypothèse est discutable), estimer pour chacune des cohortes la prévalence de la maladie dans sa population-cible.
+
+
+### Question 2
+
+On souhaite à présent utiliser l'information issue de toutes les cohortes pour estimer la prévalence de la maladie dans toute la population des 20-90 ans.
+
+Avec la même hypothèse que pour la question 1, pourquoi ne peut-on pas simplement réaliser cette estimation sur l'ensemble de l'échantillon en utilisant directement les poids de sondage proposés ?
+
+Quelle(s) information(s) serait nécessaire pour réaliser cette estimation ?
+
