@@ -1,0 +1,116 @@
+---
+title: "Devoir - partie 2"
+output: 
+  html_notebook: 
+    highlight: tango
+    theme: cerulean
+---
+
+## Rappel de la partie 1 :
+
+On réalise une étude afin d'estimer la prévalence de la maladie $M$ en population générale adulte en Île-de-France (adultes de 20 à 90 ans).
+
+Pour cela, on réalise le diagnostic dans un échantillon de 6348 sujets, composé de sujets issus de 5 cohortes :
+
+- 2686 participants de la cohorte A ;
+- 2934 participants de la cohorte B ;
+- 112 participants de la cohorte C ;
+- 119 participants de la cohorte D ;
+- 497 participants de la cohorte E.
+
+Les populations cibles de ces cohortes sont les suivantes :
+
+- A : hommes et femmes de 20 à 80 ans ;
+- B : hommes et femmes de 20 à 90 ans ;
+- C : femmes de 70 à 90 ans ;
+- D : hommes de 70 à 90 ans ;
+- E : hommes et femmes de 25 à 70 ans.
+
+Le tableau `devoir_sample` contient les données de cet échantillon. Les variables sont les suivantes :
+
+- `id` : identifiant unique de chaque sujet ;
+- `cohorte` : cohorte d'origine du sujet ;
+- `age` : âge du sujet ;
+- `sexe_m` : sexe masculin (`0` = femme, `1` = homme) ;
+- `csp` : catégorie socio-professionnelle (8 catégories) ;
+- `poids_sond` : poids de sondage (inverse des probabilités d'inclusion);
+- `statut` : présence de la maladie (`0` = non, `1` = oui).
+
+
+## Partie 2
+L'exploration des données recueillies a mis en évidence plusieurs difficultés :
+
+- Les poids de sondage ne sont pas directement comparables entre les cohortes : les modalités d'échantillonnage étant différentes selon les cohortes, un même sujet aurait différentes probabilités d'inclusion (et donc différents poids de sondage) selon la cohorte considérée. Par conséquent, les poids de sondage sont pertinents pour comparer l'"importance" relative de différents sujets d'une même cohorte mais pas de sujets issus de différentes cohortes.
+
+- Il n'est pas possible de réaliser des estimations en population directement d'après l'échantillon et les poids de sondage, notamment en raison du point précédent, mais également parce que certaines strates de la population sont à l'intersection de plusieurs populations cibles de cohortes, celles-ci se retrouveraient donc surreprésentée.
+
+- Le plan de sondage de cette étude est complexe et inclut d'autres variables que celles présentées Ainsi, deux sujets d'une même cohorte et de même sexe, âge et CSP peuvent avoir des poids de sondage différents. Il est nécessaire, dans la mesure du possible, de prendre en compte ces différences dans les estimations finales.
+
+- Certains poids de sondage de la cohorte A sont manquants. On considérera pour la suite qu'il s'agit de données manquantes selon un mécanisme *"Missing at random"* (MAR) et que les valeurs manquantes peuvent être estimées en fonction de la cohorte, de l'âge, du sexe et de la CSP. Si des méthodes d'imputation sont utilisées, il faudrait théoriquement prendre en compte la structure hiérarchique des données, ce qui n'a pas encore été abordé en cours. On peut considérer qu'une imputation par *predictive mean matching* prenant en compte les covariables d'intérêt est une approximation acceptable.
+
+
+Au vu des informations précédentes, on conclut que l'estimation en population générale devra :
+
+- respecter tant que possible le poids relatif des sujets au sein d'une même cohorte ;
+- être calibrée sur les effectifs de la population d'Île-de-France par âge, sexe et CSP (en cas d'incompatibilité, cette condition est prioritaire sur la précédente). Les fonctions `calibrate`, `postStratify` ou `rake` du package `survey` pourront être utiles.
+
+On fournit pour cela les données de recensement Insee pour cette population (fichier `devoir_population.csv`). La variable `pond_pop` correspond au nombre estimé de personnes recensées* dans la population pour la strate correspondante (la somme de ces valeurs est égale à l'effectif de la population).
+
+ <font size = "2">* *information inutile pour réaliser le devoir : il est paradoxal de parler d'estimation pour des données de recensement (on connaît toute la population et non un simple échantillon). Ici, il s'agit en fait de données de recensement recueillies sur plusieurs années et donc susceptibles d'avoir évolué pour certaines d'entre elles. Les effectifs sont donc rigoureusement des estimations mais avec une marge d'erreur négligeable, on peut les considérer comme des données de recensement.* </font>
+
+### Question 1
+
+Proposer une méthode pour estimer la prévalence de la maladie $M$ en population générale adulte en tenant compte des éléments précédents sauf la problématique de données manquantes (on considérera toutes les données renseignées) : décrire brièvement la méthode et l'évaluer par simulation.
+
+Pour la simulation, on pourra si besoin utiliser les fonctions `sim_pop` et `draw_sample` dans le fichier joint : 
+
+- la fonction `sim_pop` utilise les données de recensement Insee et des paramètres de prévalence par âge, sexe et CSP pour imputer des prévalence par strate de population.
+
+- la fonction `draw_sample` utilse les données générées par `sim_pop` pour simuler un échantillon similaire à celui des données d'origine, à partir duquel on peut réaliser des estimations.
+
+Une approche pour répondre à cette question consiste donc à :
+
+1. Générer une population théorique à partir de `sim_pop` et de paramètres arbitraires.
+
+2. À partir de cette population dont on connaît la prévalence théorique de $M$, appliquer la méthode d'estimation proposée à un grand nombre d'échantillons obtenus via `sim_pop` pour l'évaluer.
+
+
+### Question 2
+
+On considère à présent que certains poids peuvent être manquants selon un mécanisme MAR. Adapter la méthode précédente pour prendre en compte cette difficulté supplémentaire et l'évaluer par simulation.
+
+On pourra si besoin s'aider de la fonction `hide_weights` dans le fichier joint qui permet, à partir d'un échantillon obtenu par `draw_sample`, de masquer arbitrairement certaines données.
+
+
+### Question 3
+
+Appliquer la méthode proposée sur les données d'origine pour estimer la prévalence de $M$ dans la population et commenter brièvement le résultat obtenu.
+
+
+## Exemple d'utilisation des fonctions dans le fichier joint
+```{r}
+pacman::p_load(here, tidyverse)
+```
+
+### Importation des données
+```{r}
+pop <- read_csv(here("devoir", "devoir_population.csv"))
+
+source(here("devoir_modelisation", "devoir.R"))
+```
+
+Toutes les fonctions sont ici utilisées avec les paramètres par défaut, qui sont modifiables si besoin.
+
+### Simulation d'une population d'après les données Insee
+```{r}
+(.pop <- pop %>% sim_pop())
+```
+
+### Échantillonnage
+```{r}
+(.sample <- .pop %>% draw_sample())
+```
+### Masquage aléatoire de poids de sondage
+```{r}
+.sample %>% hide_weights()
+```
